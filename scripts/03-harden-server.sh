@@ -19,8 +19,9 @@ EOF
   exit 1
 fi
 
-SSHD_CONFIG="/etc/ssh/sshd_config"
-cp "$SSHD_CONFIG" "$SSHD_CONFIG.bak.$(date +%s)"
+SSHD_CONFIG="${SSHD_CONFIG:-/etc/ssh/sshd_config}"
+SSHD_BACKUP="$SSHD_CONFIG.bak.$(date +%s)"
+cp "$SSHD_CONFIG" "$SSHD_BACKUP"
 sed -i \
   -e 's/^#\?PermitRootLogin.*/PermitRootLogin no/' \
   -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' \
@@ -29,12 +30,14 @@ sed -i \
   "$SSHD_CONFIG"
 
 if command -v apt-get >/dev/null 2>&1; then
-  apt-get update
-  apt-get install -y fail2ban unattended-upgrades
-  dpkg-reconfigure -f noninteractive unattended-upgrades
+  run apt-get update
+  run apt-get install -y fail2ban unattended-upgrades
+  run dpkg-reconfigure -f noninteractive unattended-upgrades
 fi
 
-cat > /etc/fail2ban/jail.local <<'EOF'
+FAIL2BAN_JAIL="${FAIL2BAN_JAIL:-/etc/fail2ban/jail.local}"
+mkdir -p "$(dirname "$FAIL2BAN_JAIL")"
+cat > "$FAIL2BAN_JAIL" <<'EOF'
 [sshd]
 enabled = true
 maxretry = 5
@@ -42,8 +45,23 @@ bantime = 1h
 findtime = 10m
 EOF
 
-systemctl enable --now fail2ban
-systemctl restart sshd
+# Validate before restarting. A malformed sshd_config plus a restart is how
+# you lock yourself out of a remote server permanently.
+if command -v sshd >/dev/null 2>&1; then
+  if ! run sshd -t; then
+    echo "sshd_config failed validation - restoring backup and aborting." >&2
+    cp "$SSHD_BACKUP" "$SSHD_CONFIG"
+    exit 1
+  fi
+fi
+
+run systemctl enable --now fail2ban
+# The unit is 'ssh' on Debian/Ubuntu and 'sshd' on RHEL derivatives.
+if systemctl list-unit-files 2>/dev/null | grep -q '^sshd\.service'; then
+  run systemctl restart sshd
+else
+  run systemctl restart ssh
+fi
 
 echo "Hardening applied: key-only SSH, fail2ban active, unattended security updates enabled."
 echo "Backup of the previous sshd_config was saved alongside it."

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+printf '%s %s
+' "$(basename "$0")" "$*" >> "${MOCK_LOG:-/dev/null}"
+
+# Each genkey call returns a distinct, base64-shaped key so tests can assert
+# that a client config never contains the server's private key.
+counter_file="${MOCK_LOG:-/tmp/wgmock}.keycount"
+next_n() {
+  local n=0
+  [[ -f "$counter_file" ]] && n="$(cat "$counter_file")"
+  n=$((n + 1)); echo "$n" > "$counter_file"; printf '%02d' "$n"
+}
+
+case "${1:-}" in
+  genkey)  echo "PRIV$(next_n)dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdA=" ;;
+  pubkey)  read -r in_key || true; echo "PUBL${in_key#PRIV}" ;;
+  genpsk)  echo "PSK0$(next_n)dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdA=" ;;
+  *)       exit 0 ;;
+esac

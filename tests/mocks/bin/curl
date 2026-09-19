@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+printf '%s %s
+' "$(basename "$0")" "$*" >> "${MOCK_LOG:-/dev/null}"
+echo "203.0.113.10"

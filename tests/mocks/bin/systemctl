@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+printf '%s %s
+' "$(basename "$0")" "$*" >> "${MOCK_LOG:-/dev/null}"
+
+# list-unit-files is used to pick between the 'ssh' and 'sshd' unit names.
+if [[ "${1:-}" == "list-unit-files" ]]; then
+  echo "ssh.service enabled"
+fi
+exit 0

@@ -17,6 +17,6 @@ fi
 sed -i "/# BEGIN client-$CLIENT_NAME/,/# END client-$CLIENT_NAME/d" "$WG_DIR/$WG_INTERFACE.conf"
 rm -f "$CLIENT_CONF"
 
-wg syncconf "$WG_INTERFACE" <(wg-quick strip "$WG_INTERFACE")
+run wg syncconf "$WG_INTERFACE" <(wg-quick strip "$WG_INTERFACE")
 
 echo "Client '$CLIENT_NAME' revoked."

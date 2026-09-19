@@ -7,17 +7,17 @@ source "$SCRIPT_DIR/00-config.sh"
 require_root
 
 if ! command -v ufw >/dev/null 2>&1; then
-  apt-get update
-  apt-get install -y ufw
+  run apt-get update
+  run apt-get install -y ufw
 fi
 
 SSH_PORT="${SSH_PORT:-22}"
 
-ufw allow "$SSH_PORT"/tcp comment 'SSH'
-ufw allow "$WG_PORT"/udp comment 'WireGuard'
-ufw default deny incoming
-ufw default allow outgoing
-ufw --force enable
+run ufw allow "$SSH_PORT"/tcp comment 'SSH'
+run ufw allow "$WG_PORT"/udp comment 'WireGuard'
+run ufw default deny incoming
+run ufw default allow outgoing
+run ufw --force enable
 
 echo "Firewall active: inbound limited to SSH ($SSH_PORT/tcp) and WireGuard ($WG_PORT/udp)."
 echo "Next: sudo ./03-harden-server.sh"

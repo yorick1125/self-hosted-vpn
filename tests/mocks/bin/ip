@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+printf '%s %s
+' "$(basename "$0")" "$*" >> "${MOCK_LOG:-/dev/null}"
+
+# Only 'ip -4 route ls' is used, to find the default interface.
+echo "default via 203.0.113.1 dev eth0 proto static"

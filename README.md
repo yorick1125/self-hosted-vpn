@@ -17,6 +17,23 @@ sudo ./add-client.sh laptop
 
 Full walkthrough: [docs/SETUP.md](docs/SETUP.md). DNS leak details: [docs/DNS-LEAK-PREVENTION.md](docs/DNS-LEAK-PREVENTION.md).
 
+## Testing
+
+```bash
+./tests/run-tests.sh          # 47 tests, no dependencies beyond bash
+DRY_RUN=1 ./scripts/01-install-wireguard.sh   # preview without changing anything
+```
+
+The suite runs the real scripts inside a sandbox: `/etc` paths are redirected to a temp
+directory and fake `wg`, `systemctl`, `ufw` and `apt-get` binaries go on `PATH`, so assertions
+are made against the config files actually generated. It runs anywhere bash does, including
+Git Bash on Windows.
+
+Covered: address allocation, config contents, idempotent re-runs, client revocation, firewall
+rule ordering, and the guard that stops a failed `sshd -t` from ever reaching a service restart.
+
+Full detail, including how to verify a real deployment: [docs/TESTING.md](docs/TESTING.md).
+
 ## Layout
 
 ```
@@ -33,4 +50,11 @@ configs/
 docs/
   SETUP.md                  step-by-step deployment guide
   DNS-LEAK-PREVENTION.md    why the default config doesn't leak DNS, and how to verify
+  TESTING.md                how to test the scripts without a server
+tests/
+  run-tests.sh              test runner
+  test-install.sh           server install and idempotency
+  test-clients.sh           client provisioning and revocation
+  test-hardening.sh         firewall ordering and SSH lockout guards
+  mocks/bin/                fake system binaries used by the sandbox
 ```

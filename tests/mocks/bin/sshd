@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+printf '%s %s
+' "$(basename "$0")" "$*" >> "${MOCK_LOG:-/dev/null}"
+
+# -t validates the config. Fail when the sandbox marker file says to.
+if [[ "${1:-}" == "-t" && -n "${MOCK_SSHD_INVALID:-}" ]]; then
+  echo "sshd: bad configuration" >&2
+  exit 1
+fi
+exit 0

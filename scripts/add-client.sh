@@ -14,10 +14,7 @@ if [[ -f "$CLIENT_CONF" ]]; then
   exit 1
 fi
 
-SUBNET_PREFIX="${WG_SERVER_IP_V4%.*}"
-LAST_OCTET=$(grep -oP "(?<=AllowedIPs = ${SUBNET_PREFIX//./\\.}\.)\d+(?=/32)" "$WG_DIR/$WG_INTERFACE.conf" 2>/dev/null | sort -n | tail -1)
-NEXT_OCTET=$(( ${LAST_OCTET:-1} + 1 ))
-CLIENT_IP="$SUBNET_PREFIX.$NEXT_OCTET"
+CLIENT_IP="$(next_client_ip "$WG_DIR/$WG_INTERFACE.conf")"
 
 umask 077
 CLIENT_PRIVATE_KEY=$(wg genkey)
@@ -51,7 +48,7 @@ PersistentKeepalive = 25
 EOF
 chmod 600 "$CLIENT_CONF"
 
-wg syncconf "$WG_INTERFACE" <(wg-quick strip "$WG_INTERFACE")
+run wg syncconf "$WG_INTERFACE" <(wg-quick strip "$WG_INTERFACE")
 
 echo "Client '$CLIENT_NAME' added with IP $CLIENT_IP"
 echo "Config saved to $CLIENT_CONF"
